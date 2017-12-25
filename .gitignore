@@ -1,3 +1,4 @@
+# Default Haskell .gitignore
 dist
 dist-*
 cabal-dev
@@ -18,3 +19,11 @@ cabal.sandbox.config
 .stack-work/
 cabal.project.local
 .HTF/
+
+# IDEA
+.idea/
+*.ipr
+*.iml
+
+# Private data such as auth keys, and local scratch files.
+local/
