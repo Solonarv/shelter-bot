@@ -27,3 +27,6 @@ cabal.project.local
 
 # Private data such as auth keys, and local scratch files.
 local/
+
+# Files generated during install
+run
