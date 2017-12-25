@@ -6,27 +6,26 @@
     ScopedTypeVariables,
     TypeSynonymInstances,
     FlexibleInstances,
-    MultiParamTypeClasses
+    MultiParamTypeClasses,
+    AllowAmbiguousTypes
     #-}
-{-# LANGUAGE OverloadedStrings, NamedFieldPuns #-}
-module Main where
+{-# LANGUAGE OverloadedStrings, NamedFieldPuns, RecordWildCards #-}
+module Network.Discord.SimpleStaticCommand where
 
 import Network.Discord
 
-import Pipes hiding (Proxy)
-import Data.Text
-import Control.Monad.IO.Class
-import Data.Proxy
 import GHC.TypeLits
+import Data.Proxy
+import Data.Text
+import Control.Monad
 
-instance DiscordAuth IO where
-    auth = Bot <$> readFile "local/token.txt"
-    version = return "0.1.0"
-    runIO = id
+type command :=> reply = Command command :> Reply reply
+
+type MessageEvent = MessageCreateEvent :<>: MessageUpdateEvent
 
 data Command (a :: Symbol)
 
-instance KnownSymbol a => EventMap (Command a) (DiscordApp IO) where
+instance (DiscordAuth m, KnownSymbol a) => EventMap (Command a) (DiscordApp m) where
     type Domain (Command a) = Message
     type Codomain (Command a) = Message
     
@@ -40,7 +39,7 @@ instance KnownSymbol a => EventMap (Command a) (DiscordApp IO) where
 
 data Reply (a :: Symbol)
 
-instance KnownSymbol a => EventMap (Reply a) (DiscordApp IO) where
+instance (DiscordAuth m, KnownSymbol a) => EventMap (Reply a) (DiscordApp m) where
     type Domain (Reply a) = Message
     type Codomain (Reply a) = ()
     
@@ -49,16 +48,3 @@ instance KnownSymbol a => EventMap (Reply a) (DiscordApp IO) where
       where
         replyText :: Proxy (Reply a) -> String
         replyText _ = symbolVal $ Proxy @a
-
-
-type PingPong = 
-  (
-    (MessageCreateEvent :<>: MessageUpdateEvent) :>
-      (    (Command "ping" :> Reply "pong")
-      :<>: (Command "pong" :> Reply "ping")
-      )
-   )
-
-instance EventHandler PingPong IO
-
-main = runBot $ Proxy @(IO PingPong)
