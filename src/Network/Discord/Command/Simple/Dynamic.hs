@@ -47,4 +47,4 @@ instance (DiscordAuth m, MonadEnv CommandMap m) => EventMap TextualCommand (Disc
       Just temp -> do
         let response = renderTemplate temp (argToText <$> ciArguments)
         guard $ not $ T.null response
-        void $ doFetch $ CreateMessage ciChannel response Nothing
+        void $ doFetch $ CreateMessage (channelId ciChannel) response Nothing

@@ -3,6 +3,7 @@
     StandaloneDeriving,
     GeneralizedNewtypeDeriving,
     FlexibleInstances,
+    TypeFamilies,
     UndecidableInstances
     #-}
 module Network.Discord.Orphans where
@@ -11,6 +12,8 @@ import Network.Discord
 
 import Control.Monad.Trans.Class
 import Control.Monad.Reader.Class
+import Control.Monad.Trans.Control
+import Control.Monad.Base
 
 instance MonadReader e m => MonadReader e (DiscordApp m) where
   ask = lift ask
@@ -18,3 +21,11 @@ instance MonadReader e m => MonadReader e (DiscordApp m) where
 
 instance MonadTrans DiscordApp where
   lift act = DiscordApp $ \_ _ -> act
+
+instance (MonadBase io m, DiscordAuth m) => MonadBase io (DiscordApp m) where
+  liftBase = liftBaseDefault
+
+instance (MonadBaseControl io m, DiscordAuth m) => MonadBaseControl io (DiscordApp m) where
+  type StM (DiscordApp m) a = StM m a
+  restoreM st = DiscordApp $ \_ _ -> restoreM st
+  liftBaseWith f = DiscordApp $ \conn evt -> liftBaseWith (\runInBase -> f $ \act -> runInBase (runEvent act conn evt))

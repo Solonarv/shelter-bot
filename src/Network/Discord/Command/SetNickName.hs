@@ -1,32 +1,52 @@
 {-# LANGUAGE
     MultiParamTypeClasses,
     UndecidableInstances,
-    TypeFamilies
+    TypeFamilies,
+    TypeApplications
     #-}
 {-# LANGUAGE NamedFieldPuns, RecordWildCards, LambdaCase #-}
 module Network.Discord.Command.SetNickName where
 
 import Data.Text (Text)
-import qualified Data.Text as T
 
-import Data.Vector (Vector)
 import qualified Data.Vector as V
 
-import Network.Discord
+import Control.Exception.Lifted
+import Network.HTTP.Req
 
-import Network.Discord.Orphans
+import Control.Monad
+import Control.Monad.Trans.Control
+import Control.Monad.IO.Class
+
+import Network.Discord hiding (Text)
+import qualified Network.Discord as DiscordChannel (Channel(Text))
+
+import Network.Discord.Orphans ()
 import Network.Discord.Command.Parser
+import Network.Discord.Patch as Patch
 
-import Data.Has
+import Control.Monad.Environment
 
 newtype CommandSetNick = CommandSetNick { setNickCommand :: Text }
 
-instance (DiscordAuth m, MonadReader e (DiscordApp m), Has e CommandSetNick) => EventMap CommandSetNick (DiscordApp m) where
+instance (DiscordAuth m, MonadEnv CommandSetNick m, MonadBaseControl IO m) => EventMap CommandSetNick (DiscordApp m) where
   type Domain CommandSetNick = CommandInstance
   type Codomain CommandSetNick = ()
   
-  mapEvent _ CommandInstance{ciCommand, ciArguments} = do
-    CommandSetNick cmd <- asks getComponent
+  mapEvent _ CommandInstance{ciChannel, ciSender, ciCommand, ciArguments} = do
+    CommandSetNick cmd <- getEnv
     guard $ cmd == ciCommand
-    argsToUser ciArguments >>= \case
-      _ -> return ()
+    guild <- case ciChannel of
+      DiscordChannel.Text {channelGuild} -> return channelGuild
+      _ -> mzero
+    (target, newNick) <- case V.length ciArguments of
+      1 -> return (ciSender, argToText (V.head ciArguments))
+      2 -> (,) <$> retrieveUser (ciArguments V.! 0) (Just $ channelGuild ciChannel) <*> (return $ argToText $ ciArguments V.! 1)
+      _ -> mzero
+    liftIO $ putStrLn "before fetch"
+    handle (liftIO . print @HttpException) 
+      $ void 
+      $ doFetch 
+      $ ModifyGuildMember guild (userId target) 
+      $ emptyPatch {mgmpNickname = Just newNick}
+    liftIO $ putStrLn "after fetch"

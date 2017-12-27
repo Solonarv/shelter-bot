@@ -79,7 +79,7 @@ data CommandInstance = CommandInstance
   { ciCommand :: Text
   , ciOriginalCommand :: Text
   , ciArguments :: Vector CommandArg
-  , ciChannel :: Snowflake
+  , ciChannel :: Channel
   , ciSender :: User
   }
 
@@ -92,11 +92,12 @@ instance DiscordAuth m => EventMap CommandParse (DiscordApp m) where
     | userIsBot messageAuthor = mzero
     | otherwise =
       let ciOriginalCommand = messageContent
-          ciChannel = messageChannel
           ciSender = messageAuthor  
       in case parse parseCommand "<command>" messageContent of
-        Right (ciCommand, ciArguments) -> return $ CommandInstance{..}
         Left err -> liftIO (print err) >> mzero
+        Right (ciCommand, ciArguments) -> do
+          ciChannel <- doFetch $ GetChannel messageChannel
+          return CommandInstance{..}
         
 retrieveUser :: DiscordAuth m => CommandArg -> Maybe Snowflake -> DiscordApp m User
 retrieveUser (ArgSnowflake ty fl) _ = do

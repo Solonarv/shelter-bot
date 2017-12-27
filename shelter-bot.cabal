@@ -60,6 +60,7 @@ executable shelter-bot
                      , Network.Discord.Command.SetNickName
                      , Network.Discord.Aliases
                      , Network.Discord.Orphans
+                     , Network.Discord.Patch
                      , Data.Text.Template.Simple
                      , Control.Monad.Environment
 
@@ -68,6 +69,7 @@ executable shelter-bot
 
   -- Other library packages from which modules are imported.
   build-depends:       base
+                     , lifted-base
                      , discord-hs
                      , pipes
                      , text
@@ -76,6 +78,10 @@ executable shelter-bot
                      , vector
                      , containers
                      , parsec
+                     , aeson
+                     , req
+                     , monad-control
+                     , transformers-base
 
   -- Directories containing source files.
   hs-source-dirs:      src
