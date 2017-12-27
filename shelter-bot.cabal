@@ -61,7 +61,7 @@ executable shelter-bot
                      , Network.Discord.Aliases
                      , Network.Discord.Orphans
                      , Data.Text.Template.Simple
-                     , Data.Has
+                     , Control.Monad.Environment
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
@@ -71,6 +71,7 @@ executable shelter-bot
                      , discord-hs
                      , pipes
                      , text
+                     , transformers
                      , mtl
                      , vector
                      , containers

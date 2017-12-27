@@ -39,12 +39,12 @@ data CommandArg = ArgText Text | ArgSnowflake (Maybe SnowflakeType) Snowflake
 
 argToText :: CommandArg -> Text
 argToText (ArgText tx) = tx
-argToText (ArgSnowflake ty id) = case ty of
+argToText (ArgSnowflake ty flake) = case ty of
   Nothing -> shown
   Just (SnowflakeUser isNick) -> (if isNick then "<@" else "<@!") <> shown <> ">"
   Just SnowflakeRole -> "<@&" <> shown <> ">"
   Just SnowflakeChannel -> "<#" <> shown <> ">"
-  where shown = T.pack $ show id
+  where shown = T.pack $ show flake
 
 data SnowflakeType = SnowflakeUser Bool | SnowflakeChannel | SnowflakeRole
 
@@ -88,7 +88,7 @@ data CommandParse
 instance DiscordAuth m => EventMap CommandParse (DiscordApp m) where
   type Domain CommandParse = Message
   type Codomain CommandParse = CommandInstance
-  mapEvent _ (m@Message{messageContent, messageAuthor, messageChannel})
+  mapEvent _ Message{messageContent, messageAuthor, messageChannel}
     | userIsBot messageAuthor = mzero
     | otherwise =
       let ciOriginalCommand = messageContent
@@ -98,5 +98,13 @@ instance DiscordAuth m => EventMap CommandParse (DiscordApp m) where
         Right (ciCommand, ciArguments) -> return $ CommandInstance{..}
         Left err -> liftIO (print err) >> mzero
         
-    where
-    
+retrieveUser :: DiscordAuth m => CommandArg -> Maybe Snowflake -> DiscordApp m User
+retrieveUser (ArgSnowflake ty fl) _ = do
+  snowflake <- case ty of
+    Nothing -> pure fl
+    Just (SnowflakeUser _) -> pure fl
+    _ -> mzero
+  doFetch $ GetUser snowflake
+retrieveUser (ArgText _) Nothing = mzero
+retrieveUser (ArgText nm) (Just srv) = mzero
+  
