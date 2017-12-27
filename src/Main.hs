@@ -25,12 +25,14 @@ import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-import Network.Discord.SimpleStaticCommand
-import Network.Discord.SimpleDynamicCommand
 import Network.Discord.Orphans
+import Network.Discord.Aliases
+
+import Network.Discord.Command.Parser
+import Network.Discord.Command.Simple.Dynamic
 
 import Data.Has
-import Data.Text.SimpleTemplate
+import Data.Text.Template.Simple
 
 data Config = Config
   { cfgAuthToken :: String

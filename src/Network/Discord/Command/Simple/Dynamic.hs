@@ -16,7 +16,7 @@
     RecordWildCards,
     LambdaCase
     #-}
-module Network.Discord.SimpleDynamicCommand where
+module Network.Discord.Command.Simple.Dynamic where
 
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -32,30 +32,10 @@ import Control.Monad.Reader.Class
 
 import Network.Discord
 
+import Network.Discord.Command.Parser
+
 import Data.Has
-import Data.Text.SimpleTemplate
-
-data CommandInstance = CommandInstance
-  { ciCommand :: Text
-  , ciArguments :: Vector Text
-  , ciChannel :: Snowflake
-  }
-
-data CommandParse
-
-instance DiscordAuth m => EventMap CommandParse (DiscordApp m) where
-  type Domain CommandParse = Message
-  type Codomain CommandParse = CommandInstance
-  mapEvent _ (m@Message{messageContent, messageAuthor, messageChannel})
-    | userIsBot messageAuthor = mzero
-    | V.null split = mzero
-    | otherwise =
-      let ciCommand = V.head split
-          ciArguments = V.tail split
-          ciChannel = messageChannel
-      in return $ CommandInstance{..}
-    where
-      split = V.fromList $ T.words messageContent
+import Data.Text.Template.Simple
 
 type CommandMap = Map Text SimpleTemplate
 
@@ -68,5 +48,6 @@ instance (DiscordAuth m, MonadReader e (DiscordApp m), Has e CommandMap) => Even
     asks (M.lookup ciCommand . getComponent) >>= \case
       Nothing -> mzero
       Just temp -> do
-        let response = renderTemplate temp ciArguments
+        let response = renderTemplate temp (argToText <$> ciArguments)
+        guard $ not $ T.null response
         void $ doFetch $ CreateMessage ciChannel response Nothing

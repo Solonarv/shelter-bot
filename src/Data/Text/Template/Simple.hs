@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Data.Text.SimpleTemplate where
+module Data.Text.Template.Simple where
 
 import Data.Text (Text)
 import qualified Data.Text as T

@@ -10,7 +10,7 @@
     AllowAmbiguousTypes
     #-}
 {-# LANGUAGE OverloadedStrings, NamedFieldPuns, RecordWildCards #-}
-module Network.Discord.SimpleStaticCommand where
+module Network.Discord.Command.Simple.Static where
 
 import Network.Discord
 
@@ -20,8 +20,6 @@ import Data.Text
 import Control.Monad
 
 type command :=> reply = Command command :> Reply reply
-
-type MessageEvent = MessageCreateEvent :<>: MessageUpdateEvent
 
 data Command (a :: Symbol)
 
