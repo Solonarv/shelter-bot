@@ -25,6 +25,7 @@ cabal.project.local
 *.ipr
 *.iml
 *.code-workspace
+.vscode
 
 # Private data such as auth keys, and local scratch files.
 local/
