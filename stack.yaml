@@ -37,6 +37,12 @@ resolver: lts-9.20
 # will not be run. This is useful for tweaking upstream packages.
 packages:
   - '.'
+  - location: '../Discord.hs'
+    extra-dep: true
+    subdirs:
+      - discord-types
+      - discord-rest
+      - discord-gateway
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 # extra-deps: 

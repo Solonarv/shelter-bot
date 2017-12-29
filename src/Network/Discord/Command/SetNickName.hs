@@ -54,7 +54,7 @@ instance (
           if (userId target == userId self) 
             then void
               $ doFetch
-              $ ModifyGuildNick guild newNick
+              $ ModifyOwnNick guild newNick
             else void
               $ doFetch 
               $ ModifyGuildMember guild (userId target) 
