@@ -17,7 +17,7 @@ import Network.Discord
 
 import Control.Applicative
 import Control.Monad.IO.Class
-import Control.Monad.Reader
+import Control.Monad.State as St
 import Data.Proxy
 
 import qualified Data.Map as M
@@ -31,6 +31,8 @@ import Control.Monad.Trans.Control
 import Network.Discord.Orphans ()
 import Network.Discord.Aliases
 
+import Network.Discord.User
+
 import Network.Discord.Command.Parser
 import Network.Discord.Command.Simple.Dynamic
 import Network.Discord.Command.SetNickName
@@ -42,16 +44,17 @@ data Config = Config
   { cfgAuthToken :: String
   , cfgCommandMap :: CommandMap
   , cfgNickComand :: CommandSetNick
+  , cfgOwnUser :: OwnUser
   }
 
-type AppStack = ReaderT Config IO
+type AppStack = StateT Config IO
 
 newtype AppM a = AppM { runAppM :: AppStack a }
   deriving 
     ( Functor
     , Applicative
     , Monad
-    , MonadReader Config
+    , MonadState Config
     , MonadIO
     , Alternative
     , MonadPlus
@@ -63,23 +66,28 @@ instance MonadBaseControl IO AppM where
   restoreM st = AppM $ restoreM st
   liftBaseWith f = AppM $ liftBaseWith $ \rio -> f (rio . runAppM)
 
-
-
 instance MonadEnv CommandMap AppM where
-  getEnv = asks cfgCommandMap
+  getEnv = gets cfgCommandMap
 
 instance MonadEnv CommandSetNick AppM where
-  getEnv = asks cfgNickComand
+  getEnv = gets cfgNickComand
+
+instance MonadEnv OwnUser AppM where
+  getEnv = gets cfgOwnUser
+
+instance MonadEnvMut OwnUser AppM where
+  modifyEnv f = St.modify $ \cfg -> cfg { cfgOwnUser = f (cfgOwnUser cfg)}
 
 instance DiscordAuth AppM where
-  auth = Bot <$> asks cfgAuthToken
+  auth = Bot <$> gets cfgAuthToken
   version = return "0.1.0"
   runIO (AppM act) = do
     cfgAuthToken <- readFile "local/token.txt"
     cfgCommandMap <- readCommandMap
     let cfgNickComand = CommandSetNick "!nick"
+    let cfgOwnUser = undefined
     let cfg = Config {..}
-    runReaderT act cfg
+    evalStateT act cfg
 
 readCommandMap :: IO CommandMap
 readCommandMap = foldMap readCommand . T.lines <$> T.readFile "local/commands.txt"
@@ -89,12 +97,23 @@ readCommandMap = foldMap readCommand . T.lines <$> T.readFile "local/commands.tx
       let (cmd, temp) = T.breakOn "=" l
       in M.singleton (T.strip cmd) (parseTemplate $ T.strip $ T.tail temp)
 
-instance EventHandler CommandProcessor AppM
+data PerformSetup
+
+instance (MonadEnvMut OwnUser m, DiscordAuth m) => EventMap PerformSetup (DiscordApp m) where
+  type Domain PerformSetup = Init
+  type Codomain PerformSetup = ()
+  mapEvent _ (Init _ usr _ _ _) = setEnv $ OwnUser usr 
+
+instance EventHandler RunApp AppM
+
+type ReadyHandler = ReadyEvent :> PerformSetup
 
 type CommandProcessor = MessageEvent :> CommandParse
   :> (   TextualCommand
     :<>: CommandSetNick
   ) 
 
+type RunApp = ReadyHandler :<>: CommandProcessor
+
 main :: IO ()
-main = runBot $ Proxy @(AppM CommandProcessor)
+main = runBot $ Proxy @(AppM RunApp)

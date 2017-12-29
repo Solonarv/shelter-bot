@@ -24,12 +24,18 @@ import qualified Network.Discord as DiscordChannel (Channel(Text))
 import Network.Discord.Orphans ()
 import Network.Discord.Command.Parser
 import Network.Discord.Patch as Patch
+import Network.Discord.User
 
 import Control.Monad.Environment
 
 newtype CommandSetNick = CommandSetNick { setNickCommand :: Text }
 
-instance (DiscordAuth m, MonadEnv CommandSetNick m, MonadBaseControl IO m) => EventMap CommandSetNick (DiscordApp m) where
+instance (
+  DiscordAuth m, 
+  MonadEnv CommandSetNick m, 
+  MonadEnvMut OwnUser m,
+  MonadBaseControl IO m) 
+  => EventMap CommandSetNick (DiscordApp m) where
   type Domain CommandSetNick = CommandInstance
   type Codomain CommandSetNick = ()
   
@@ -43,10 +49,14 @@ instance (DiscordAuth m, MonadEnv CommandSetNick m, MonadBaseControl IO m) => Ev
       1 -> return (ciSender, argToText (V.head ciArguments))
       2 -> (,) <$> retrieveUser (ciArguments V.! 0) (Just $ channelGuild ciChannel) <*> (return $ argToText $ ciArguments V.! 1)
       _ -> mzero
-    liftIO $ putStrLn "before fetch"
-    handle (liftIO . print @HttpException) 
-      $ void 
-      $ doFetch 
-      $ ModifyGuildMember guild (userId target) 
-      $ emptyPatch {mgmpNickname = Just newNick}
-    liftIO $ putStrLn "after fetch"
+    self <- ownUser
+    let req = 
+          if (userId target == userId self) 
+            then void
+              $ doFetch
+              $ ModifyGuildNick guild newNick
+            else void
+              $ doFetch 
+              $ ModifyGuildMember guild (userId target) 
+              $ emptyPatch {mgmpNickname = Just newNick}
+    handle (liftIO . print @HttpException) req

@@ -1,9 +1,17 @@
 {-# LANGUAGE
     MultiParamTypeClasses,
     FlexibleInstances,
-    UndecidableInstances
+    UndecidableInstances,
+    TypeApplications,
+    AllowAmbiguousTypes,
+    ExplicitForAll,
+    ScopedTypeVariables,
+    FlexibleContexts
     #-}
 module Control.Monad.Environment where
+
+import Data.Maybe
+import Data.Proxy
 
 import Control.Monad.Reader
 import Control.Monad.State
@@ -22,6 +30,20 @@ class MonadEnv e m => MonadEnvMut e m where
     modifyEnv f = getEnv >>= setEnv . f
     {-# MINIMAL setEnv | modifyEnv #-}
 
+setOptionalEnv :: MonadEnvMut (Maybe e) m => e -> m ()
+setOptionalEnv = setEnv . Just
+
+hasOptionalEnv :: MonadEnv (Maybe e) m => proxy e -> m Bool
+hasOptionalEnv (_ :: proxy e) = isJust <$> getEnv @(Maybe e)
+
+hasOptionalEnv' :: forall e m. MonadEnv (Maybe e) m => m Bool
+hasOptionalEnv' = hasOptionalEnv $ Proxy @e
+
+deleteOptionalEnv :: MonadEnvMut (Maybe e) m => proxy e -> m ()
+deleteOptionalEnv (_ :: proxy e) = setEnv $ Nothing @e
+
+deleteOptionalEnv' :: forall e m. MonadEnvMut (Maybe e) m => m ()
+deleteOptionalEnv' = deleteOptionalEnv $ Proxy @e
 
 instance Monad m => MonadEnv e (ReaderT e m) where
     getEnv = ask
