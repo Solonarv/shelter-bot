@@ -33,7 +33,7 @@ newtype CommandSetNick = CommandSetNick { setNickCommand :: Text }
 instance (
   DiscordAuth m, 
   MonadEnv CommandSetNick m, 
-  MonadEnvMut OwnUser m,
+  MonadEnvMut (Maybe OwnUser) m,
   MonadBaseControl IO m) 
   => EventMap CommandSetNick (DiscordApp m) where
   type Domain CommandSetNick = CommandInstance

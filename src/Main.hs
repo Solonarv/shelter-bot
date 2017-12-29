@@ -44,7 +44,7 @@ data Config = Config
   { cfgAuthToken :: String
   , cfgCommandMap :: CommandMap
   , cfgNickComand :: CommandSetNick
-  , cfgOwnUser :: OwnUser
+  , cfgOwnUser :: Maybe OwnUser
   }
 
 type AppStack = StateT Config IO
@@ -72,10 +72,10 @@ instance MonadEnv CommandMap AppM where
 instance MonadEnv CommandSetNick AppM where
   getEnv = gets cfgNickComand
 
-instance MonadEnv OwnUser AppM where
+instance MonadEnv (Maybe OwnUser) AppM where
   getEnv = gets cfgOwnUser
 
-instance MonadEnvMut OwnUser AppM where
+instance MonadEnvMut (Maybe OwnUser) AppM where
   modifyEnv f = St.modify $ \cfg -> cfg { cfgOwnUser = f (cfgOwnUser cfg)}
 
 instance DiscordAuth AppM where
@@ -85,7 +85,7 @@ instance DiscordAuth AppM where
     cfgAuthToken <- readFile "local/token.txt"
     cfgCommandMap <- readCommandMap
     let cfgNickComand = CommandSetNick "!nick"
-    let cfgOwnUser = undefined
+    let cfgOwnUser = Nothing
     let cfg = Config {..}
     evalStateT act cfg
 
@@ -99,10 +99,10 @@ readCommandMap = foldMap readCommand . T.lines <$> T.readFile "local/commands.tx
 
 data PerformSetup
 
-instance (MonadEnvMut OwnUser m, DiscordAuth m) => EventMap PerformSetup (DiscordApp m) where
+instance (MonadEnvMut (Maybe OwnUser) m, DiscordAuth m) => EventMap PerformSetup (DiscordApp m) where
   type Domain PerformSetup = Init
   type Codomain PerformSetup = ()
-  mapEvent _ (Init _ usr _ _ _) = setEnv $ OwnUser usr 
+  mapEvent _ (Init _ usr _ _ _) = setEnv $ Just $ OwnUser usr 
 
 instance EventHandler RunApp AppM
 
