@@ -20,12 +20,13 @@ cabal.sandbox.config
 cabal.project.local
 .HTF/
 
-# IDEs
+# IDEs, editors
 .idea/
 *.ipr
 *.iml
 *.code-workspace
 .vscode
+*.swp
 
 # Private data such as auth keys, and local scratch files.
 local/
