@@ -70,8 +70,8 @@ executable shelter-bot
   -- Other library packages from which modules are imported.
   build-depends:       base
                      , lifted-base
-                     , discord-hs
-                     , discord-rest
+                     , discord-hs-imp
+                     , discord-rest-imp
                      , pipes
                      , text
                      , transformers

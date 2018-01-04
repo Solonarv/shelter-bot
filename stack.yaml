@@ -39,10 +39,12 @@ packages:
   - '.'
   - location: '../Discord.hs'
     extra-dep: true
-    subdirs:
-      - discord-types
-      - discord-rest
-      - discord-gateway
+  - location: '../Discord.hs/discord-types'
+    extra-dep: true
+  - location: '../Discord.hs/discord-rest'
+    extra-dep: true
+  - location: '../Discord.hs/discord-gateway'
+    extra-dep: true
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 # extra-deps: 
