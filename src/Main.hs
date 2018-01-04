@@ -79,8 +79,9 @@ instance MonadEnvMut (Maybe OwnUser) AppM where
   modifyEnv f = St.modify $ \cfg -> cfg { cfgOwnUser = f (cfgOwnUser cfg)}
 
 instance DiscordAuth AppM where
-  auth = Bot <$> gets cfgAuthToken
-  version = return "0.1.0"
+  auth             = Bot <$> gets cfgAuthToken
+  version          = return "0.1.0"
+  userAgent        = return "shelter-bot (https://github.com/Solonarv/shelter-bot)"
   runIO (AppM act) = do
     cfgAuthToken <- readFile "local/token.txt"
     cfgCommandMap <- readCommandMap
