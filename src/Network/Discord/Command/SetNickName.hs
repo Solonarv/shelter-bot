@@ -11,17 +11,14 @@ import Data.Text (Text)
 
 import qualified Data.Vector as V
 
-import Control.Exception.Lifted
-import Network.HTTP.Req
-
 import Control.Monad
-import Control.Monad.Trans.Control
 import Control.Monad.IO.Class
+import Network.HTTP.Req (HttpException)
+import UnliftIO.Exception
 
 import Network.Discord hiding (Text)
 import qualified Network.Discord as DiscordChannel (Channel(Text))
 
-import Network.Discord.Orphans ()
 import Network.Discord.Command.Parser
 import Network.Discord.Patch as Patch
 import Network.Discord.User
@@ -33,8 +30,7 @@ newtype CommandSetNick = CommandSetNick { setNickCommand :: Text }
 instance (
   DiscordAuth m, 
   MonadEnv CommandSetNick m, 
-  MonadEnvMut (Maybe OwnUser) m,
-  MonadBaseControl IO m) 
+  MonadEnvMut (Maybe OwnUser) m) 
   => EventMap CommandSetNick (DiscordApp m) where
   type Domain CommandSetNick = CommandInstance
   type Codomain CommandSetNick = ()

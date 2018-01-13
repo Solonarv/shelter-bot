@@ -16,7 +16,6 @@ module Main where
 import Network.Discord
 
 import Control.Applicative
-import Control.Monad.IO.Class
 import Control.Monad.State as St
 import Data.Proxy
 
@@ -25,16 +24,10 @@ import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-import Control.Monad.Base
-import Control.Monad.Trans.Control
-
 import Control.Monad.IO.Unlift
 
-import Network.Discord.Orphans ()
 import Network.Discord.Aliases
-
 import Network.Discord.User
-
 import Network.Discord.Command.Parser
 import Network.Discord.Command.Simple.Dynamic
 import Network.Discord.Command.SetNickName
@@ -60,13 +53,7 @@ newtype AppM a = AppM { runAppM :: AppStack a }
     , MonadIO
     , Alternative
     , MonadPlus
-    , MonadBase IO
     )
-
-instance MonadBaseControl IO AppM where
-  type StM AppM a = StM AppStack a
-  restoreM st = AppM $ restoreM st
-  liftBaseWith f = AppM $ liftBaseWith $ \rio -> f (rio . runAppM)
 
 instance MonadUnliftIO AppM where
   askUnliftIO = AppM $ do

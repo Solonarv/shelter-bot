@@ -29,7 +29,6 @@ import Control.Monad
 import Network.Discord
 
 import Network.Discord.Command.Parser
-import Network.Discord.Orphans ()
 
 import Control.Monad.Environment
 import Data.Text.Template.Simple

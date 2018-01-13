@@ -7,12 +7,7 @@
     #-}
 module Network.Discord.User where
 
-import Data.Text (Text)
-
 import Network.Discord
-import Network.Discord.Rest
-
-import Network.Discord.Orphans ()
 
 import Control.Monad.Environment
 

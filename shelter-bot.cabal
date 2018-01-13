@@ -59,8 +59,8 @@ executable shelter-bot
                      , Network.Discord.Command.Parser
                      , Network.Discord.Command.SetNickName
                      , Network.Discord.Aliases
-                     , Network.Discord.Orphans
                      , Network.Discord.Patch
+                     , Network.Discord.User
                      , Data.Text.Template.Simple
                      , Control.Monad.Environment
 
@@ -69,10 +69,8 @@ executable shelter-bot
 
   -- Other library packages from which modules are imported.
   build-depends:       base
-                     , lifted-base
                      , discord-hs-imp
                      , discord-rest-imp
-                     , pipes
                      , text
                      , transformers
                      , mtl
@@ -81,9 +79,6 @@ executable shelter-bot
                      , parsec
                      , aeson
                      , req
-                     , monad-control
-                     , transformers-base
-                     , hashable
                      , unliftio-core
                      , unliftio
 
