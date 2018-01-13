@@ -84,6 +84,8 @@ executable shelter-bot
                      , monad-control
                      , transformers-base
                      , hashable
+                     , unliftio-core
+                     , unliftio
 
   -- Directories containing source files.
   hs-source-dirs:      src

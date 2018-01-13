@@ -28,6 +28,8 @@ import qualified Data.Text.IO as T
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 
+import Control.Monad.IO.Unlift
+
 import Network.Discord.Orphans ()
 import Network.Discord.Aliases
 
@@ -65,6 +67,12 @@ instance MonadBaseControl IO AppM where
   type StM AppM a = StM AppStack a
   restoreM st = AppM $ restoreM st
   liftBaseWith f = AppM $ liftBaseWith $ \rio -> f (rio . runAppM)
+
+instance MonadUnliftIO AppM where
+  askUnliftIO = AppM $ do
+    st <- St.get
+    return $ UnliftIO $ \(AppM act) ->
+      evalStateT act st
 
 instance MonadEnv CommandMap AppM where
   getEnv = gets cfgCommandMap

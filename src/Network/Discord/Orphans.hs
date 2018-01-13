@@ -19,9 +19,6 @@ instance MonadReader e m => MonadReader e (DiscordApp m) where
   ask = lift ask
   local f (DiscordApp k) = DiscordApp $ \con evt -> local f $ k con evt
 
-instance MonadTrans DiscordApp where
-  lift act = DiscordApp $ \_ _ -> act
-
 instance (MonadBase io m, DiscordAuth m) => MonadBase io (DiscordApp m) where
   liftBase = liftBaseDefault
 
